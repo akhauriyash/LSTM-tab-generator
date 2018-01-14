@@ -25,26 +25,47 @@ def to_categorical(y, num_classes=None):
     output_shape = input_shape + (num_classes,)
     categorical = np.reshape(categorical, output_shape)
     return categorical
-
+    
+    
+#### REPLACING 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+####           # , $ , > , ^ , & , * , ( , ) , _ , + , = , } , { , " , : 
+first_time = 1
 a = time.time()
-file = open('Eedata2.txt', 'r')
+if first_time:
+    replacements = {'10': '#-', '11': '$-', '12': '>-', '13': '^', '14': '&-',
+                    '15': '*-', '16': '(-', '17': ')-', '18': '_-', '19': '+-',
+                    '20': '=-', '21': '}-', '22': '{-', '23': '"-', '24': ':-'}
+    print("starting replacements")
+    with open('Eeinput.txt', 'r') as infile, open('replacedout.txt', 'w') as outfile:
+        for line in infile:
+            for src, target in replacements.items():
+                line = line.replace(src, target)
+                line = line.replace("|", "-")
+            outfile.write(line)
+    print("Replaced numbers greater than 10 with symbols")
+print(time.time() - a)
+a = time.time()
+file = open('replacedout.txt', 'r')
 data = file.read()
 print("Read time : " + str(time.time() - a))
+
+allowed = ['"', '#', '$', '%', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3',
+           '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
 
 train = [[],[],[],[],[],[]]
 true = [[],[],[],[],[],[]]
 chars2 = sorted(list(set(data)))
-chars2 = chars2[2:]
-chars = chars2[:11]
-chars.append(chars2[-1])
+print(chars2)
+chars = []
+for s in chars2:
+    if s in allowed:
+        chars.append(s)
 charint = dict((char, ints) for ints, char in enumerate(chars))
 intchar = dict((ints,char) for ints, char in enumerate(chars))
-
 print(chars)
 print(charint)
 print(intchar)
-
-
+print(len(chars))
 seqlen = 100
 a = time.time()
 for line in data.split("%"):
@@ -100,5 +121,5 @@ print(y.shape)
 print("Shape of input: ", inp.shape)
 print("Shape of output: ", y.shape)
 
-np.save("smallinput", inp)
-np.save("smalltrue", y)
+np.save("input", inp)
+np.save("true", y)
