@@ -29,7 +29,7 @@ def to_categorical(y, num_classes=None):
     
 #### REPLACING 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
 ####           # , $ , > , ^ , & , * , ( , ) , _ , + , = , } , { , " , : 
-first_time = 1
+first_time = 0
 a = time.time()
 if first_time:
     replacements = {'10': '#-', '11': '$-', '12': '>-', '13': '^', '14': '&-',
@@ -49,7 +49,9 @@ file = open('replacedout.txt', 'r')
 data = file.read()
 print("Read time : " + str(time.time() - a))
 
-allowed = ['"', '#', '$', '%', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3',
+allowed = ['"', '#', '$', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3',
+           '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
+container = ['"', '#', '$', '&', '(', ')', '*', '+', '0', '1', '2', '3',
            '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
 
 train = [[],[],[],[],[],[]]
@@ -70,13 +72,23 @@ seqlen = 100
 a = time.time()
 for line in data.split("%"):
     note = 0
+    n = 0
     for item in line.split("\n"):
         item = item[1:]
-        if (len(item[:len(item)//2]) > 0):
-            for i in range(0, len(item) - seqlen, 1):
-                train[note].append([charint[char] for char in item[i:i+seqlen]])
-                true[note].append([charint[char] for char in item[i+seqlen]])
-            note += 1
+        for s in item:
+            if s in container:
+                n = 1
+            else:
+                pass
+    if(n==1):
+        for item in line.split("\n"):
+            item = item[1:]
+#            print(item)
+            if (len(item[:len(item)//2]) > 0):
+                for i in range(0, len(item) - seqlen, 1):
+                    train[note].append([charint[char] for char in item[i:i+seqlen]])
+                    true[note].append([charint[char] for char in item[i+seqlen]])
+                note += 1
 
 print("Train true generation : " + str(time.time() - a))
 
