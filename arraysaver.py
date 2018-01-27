@@ -3,12 +3,10 @@
 Created on Sat Jan 13 15:55:25 2018
 
 @author: yash
+
 """
-import tensorflow as tf
+#import tensorflow as tf
 import numpy as np
-import sys
-import string
-import tflearn
 import time
 
 def to_categorical(y, num_classes=None):
@@ -37,15 +35,15 @@ if first_time:
                     '20': '=-', '21': '}-', '22': '{-', '23': '"-', '24': ':-'}
     print("starting replacements")
     with open('Eeinput.txt', 'r') as infile, open('replacedout.txt', 'w') as outfile:
-        for line in infile:
-            for src, target in replacements.items():
-                line = line.replace(src, target)
-                line = line.replace("|", "-")
-            outfile.write(line)
+        for segment in infile:
+            for src, target in replacements.linefs():
+                segment = segment.replace(src, target)
+                segment = segment.replace("|", "-")
+            outfile.write(segment)
     print("Replaced numbers greater than 10 with symbols")
 print(time.time() - a)
 a = time.time()
-file = open('replacedout.txt', 'r')
+file = open('mini1.txt', 'r')
 data = file.read()
 print("Read time : " + str(time.time() - a))
 
@@ -64,43 +62,79 @@ for s in chars2:
         chars.append(s)
 charint = dict((char, ints) for ints, char in enumerate(chars))
 intchar = dict((ints,char) for ints, char in enumerate(chars))
-print(chars)
-print(charint)
-print(intchar)
-print(len(chars))
-seqlen = 100
-a = time.time()
-for line in data.split("%"):
-    note = 0
-    n = 0
-    for item in line.split("\n"):
-        item = item[1:]
-        for s in item:
-            if s in container:
-                n = 1
-            else:
-                pass
-    if(n==1):
-        for item in line.split("\n"):
-            item = item[1:]
-#            print(item)
-            if (len(item[:len(item)//2]) > 0):
-                for i in range(0, len(item) - seqlen, 1):
-                    train[note].append([charint[char] for char in item[i:i+seqlen]])
-                    true[note].append([charint[char] for char in item[i+seqlen]])
-                note += 1
+seqlen = 16
 
-print("Train true generation : " + str(time.time() - a))
+a = time.time()
+
+e = 'e'
+B = 'B'
+G = 'G'
+D = 'D'
+A = 'A'
+E = 'E'
+for segment in data.split("\n%\n"):
+    note = 0
+    for line in segment.split("\n"):
+        if(note==0):
+            e += line
+            note += 1
+        elif(note==1):
+            B += line
+            note += 1
+        elif(note==2):
+            G += line
+            note += 1
+        elif(note==3):
+            D += line
+            note += 1
+        elif(note==4):
+            A += line
+            note += 1
+        elif(note==5):
+            E += line
+            note += 1
+e = e[1:]
+B = B[1:]
+G = G[1:]
+D = D[1:]
+A = A[1:]
+E = E[1:]
+print(time.time() - a)
+
+size = min(len(e), len(B), len(G), len(D), len(A), len(E))
+print(size)
+
+a = time.time()
+
+
+for i in range(0, size - seqlen - 4, 4):
+    train[0].append([charint[char] for char in e[i:i+seqlen]])
+    train[1].append([charint[char] for char in B[i:i+seqlen]])
+    train[2].append([charint[char] for char in G[i:i+seqlen]])
+    train[3].append([charint[char] for char in D[i:i+seqlen]])
+    train[4].append([charint[char] for char in A[i:i+seqlen]])
+    train[5].append([charint[char] for char in E[i:i+seqlen]])
+    true[0].append([charint[char] for char in e[i+seqlen]])
+    true[1].append([charint[char] for char in B[i+seqlen]])
+    true[2].append([charint[char] for char in G[i+seqlen]])
+    true[3].append([charint[char] for char in D[i+seqlen]])
+    true[4].append([charint[char] for char in A[i+seqlen]])
+    true[5].append([charint[char] for char in E[i+seqlen]])
+
+print(time.time() - a)
+
 
 learn = np.array([np.array(xi) for xi in train])
 test = np.asarray([np.array(xi) for xi in true])
+
+print("Learn shape:  ", end="")
+print(learn.shape)
+print("Test shape:   ", end="")
+print(test.shape)
+
 del train
 del true
-minsize = []
-for i in range(6):
-    minsize.append(np.array(learn[i]).shape[0])
-size = min(minsize)
-del minsize
+del e, B, G, D, A, E
 
 a = time.time()
 e = np.expand_dims(np.array(np.asarray(learn[0])[:size, :]), axis = 0)
@@ -118,20 +152,39 @@ y_D = np.expand_dims(test[3][:size], axis = 0)
 y_A = np.expand_dims(test[4][:size], axis = 0)
 y_E = np.expand_dims(test[5][:size], axis = 0)
 y_array = np.concatenate((y_e, y_B, y_G, y_D, y_A, y_E), axis = 0)
-print(y_array.shape)
-y2 = to_categorical(y_array)
+print(y_array.shape)                                                # (6, 3321076, 1)
+y2 = to_categorical(y_array)                                        # (6, 3321076, 26)
 print(y2.shape)
-inp = np.swapaxes(X, 0, 1)
+inp = np.swapaxes(X, 0, 1)                      
 y2 = np.swapaxes(y2, 0, 1)
-print(y2.shape)
+print(y2.shape)                                                     # (3321076, 6, 26)
 y = np.empty((y2.shape[0], y2.shape[1]*y2.shape[2]))
 for i in range(y2.shape[0]):
     y[i] = y2[i, :, :].flatten()
-print(y.shape)
+print(y.shape)                                                      # (3321076, 156)
 y = np.squeeze(y)
-print(y.shape)
-print("Shape of input: ", inp.shape)
-print("Shape of output: ", y.shape)
+print(y.shape)                                                      # (3321076, 156)
+print("Shape of input: ", inp.shape)    #            Shape of input:  (3321076, 6, 16)
+print("Shape of output: ", y.shape)     #            Shape of output: (3321076, 156)
 
-np.save("input", inp)
-np.save("true", y)
+np.save("smallinput", inp)
+np.save("smalltrue", y)
+
+'''
+
+0.0
+Read time : 1.1393682956695557
+['\n', '"', '#', '$', '%', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
+99.8011724948883
+13284323
+153.53768730163574
+Learn shape:  (6, 3321076, 16)
+Test shape:   (6, 3321076, 1)
+(6, 3321076, 1)
+(6, 3321076, 26)
+(3321076, 6, 26)
+(3321076, 156)
+(3321076, 156)
+Shape of input:  (3321076, 6, 16)
+Shape of output:  (3321076, 156)
+'''
