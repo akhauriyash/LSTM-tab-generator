@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jan 13 15:55:25 2018
-
-@author: yash
-
-"""
 import numpy as np
 import time
 
@@ -32,7 +25,7 @@ replacements = {'10': '#-', '11': '$-', '12': '>-', '13': '^', '14': '&-',
                 '15': '*-', '16': '(-', '17': ')-', '18': '_-', '19': '+-',
                 '20': '=-', '21': '}-', '22': '{-', '23': '"-', '24': ':-'}
 print("########## Starting replacements ##########")
-with open('Eedata2.txt', 'r') as infile, open('temp.txt', 'w') as outfile:
+with open('input.txt', 'r') as infile, open('stage1.txt', 'w') as outfile:
     for segment in infile:
         for src, target in replacements.items():
             segment = segment.replace(src, target)
@@ -40,7 +33,7 @@ with open('Eedata2.txt', 'r') as infile, open('temp.txt', 'w') as outfile:
         outfile.write(segment)
 print("Replaced numbers greater than 10 with symbols")
 print("########## Starting dataset alignment ##########")
-with open('temp.txt', 'r') as file, open('datasesssst.txt', 'w') as writeto:
+with open('stage1.txt', 'r') as file, open('stage2.txt', 'w') as writeto:
     data = file.read()
     for line in data.split("%"):
         c = 0
@@ -59,9 +52,7 @@ with open('temp.txt', 'r') as file, open('datasesssst.txt', 'w') as writeto:
             writeto.write("%")
 print("Written aligned dataset")
 print("########## Starting dataset reduction ##########")
-with open('datasesssst.txt', 'r') as file, open('dataset2.txt', 'w') as writeto:
-    i = 0
-    a = time.time()
+with open('stage2.txt', 'r') as file, open('dataset.txt', 'w') as writeto:
     for segment in data.split("\n%\n"):
         if len(segment) > 30:
             ns = []
@@ -82,10 +73,9 @@ with open('datasesssst.txt', 'r') as file, open('dataset2.txt', 'w') as writeto:
             writeto.write("%\n")
         else:
             pass
-    print(time.time() - a)
 print("Final processing time:  " + str(time.time() - a))
 a = time.time()
-file = open('dataset2.txt', 'r')
+file = open('dataset.txt', 'r')
 data = file.read()
 print("Read time:  " + str(time.time() - a))
 
