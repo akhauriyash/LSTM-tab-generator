@@ -5,10 +5,10 @@ Created on Sat Jan 13 15:55:25 2018
 @author: yash
 
 """
-#import tensorflow as tf
 import numpy as np
 import time
 
+#   Convert input array to one-hot encoding
 def to_categorical(y, num_classes=None):
     y = np.array(y, dtype='int')
     input_shape = y.shape
@@ -24,48 +24,94 @@ def to_categorical(y, num_classes=None):
     categorical = np.reshape(categorical, output_shape)
     return categorical
     
-    
 #### REPLACING 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+#### from the dataset, so that one-hot classification can be done.
 ####           # , $ , > , ^ , & , * , ( , ) , _ , + , = , } , { , " , : 
-first_time = 0
 a = time.time()
-if first_time:
-    replacements = {'10': '#-', '11': '$-', '12': '>-', '13': '^', '14': '&-',
-                    '15': '*-', '16': '(-', '17': ')-', '18': '_-', '19': '+-',
-                    '20': '=-', '21': '}-', '22': '{-', '23': '"-', '24': ':-'}
-    print("starting replacements")
-    with open('Eeinput.txt', 'r') as infile, open('replacedout.txt', 'w') as outfile:
-        for segment in infile:
-            for src, target in replacements.linefs():
-                segment = segment.replace(src, target)
-                segment = segment.replace("|", "-")
-            outfile.write(segment)
-    print("Replaced numbers greater than 10 with symbols")
-print(time.time() - a)
+replacements = {'10': '#-', '11': '$-', '12': '>-', '13': '^', '14': '&-',
+                '15': '*-', '16': '(-', '17': ')-', '18': '_-', '19': '+-',
+                '20': '=-', '21': '}-', '22': '{-', '23': '"-', '24': ':-'}
+print("########## Starting replacements ##########")
+with open('Eedata2.txt', 'r') as infile, open('temp.txt', 'w') as outfile:
+    for segment in infile:
+        for src, target in replacements.items():
+            segment = segment.replace(src, target)
+            segment = segment.replace("|", "-")
+        outfile.write(segment)
+print("Replaced numbers greater than 10 with symbols")
+print("########## Starting dataset alignment ##########")
+with open('temp.txt', 'r') as file, open('datasesssst.txt', 'w') as writeto:
+    data = file.read()
+    for line in data.split("%"):
+        c = 0
+        if(len(line) > 7):
+            crop = 0
+            lenc = []
+            for item in line.split("\n"):
+                if len(item) > 0:
+                    lenc.append(len(item))
+            min_len = min(lenc)
+            for item in line.split("\n"):
+                c += 1
+                writeto.write(item[:min_len])
+                if(c!=7):
+                    writeto.write("\n")
+            writeto.write("%")
+print("Written aligned dataset")
+print("########## Starting dataset reduction ##########")
+with open('datasesssst.txt', 'r') as file, open('dataset2.txt', 'w') as writeto:
+    i = 0
+    a = time.time()
+    for segment in data.split("\n%\n"):
+        if len(segment) > 30:
+            ns = []
+            for line in segment.split("\n"):
+                ns.append(len(line[1:]))
+            numchk = np.zeros(min(ns))
+            for line in segment.split("\n"):
+                if len(line[1:]) > 7:
+                    for index, character in enumerate(line[1:min(ns)]):
+                        if character == "-":
+                            numchk[index] += 1
+            for line in segment.split("\n"):
+                if len(line[1:]) > 7:
+                    for index, character in enumerate(line[1:min(ns)]):
+                        if numchk[index] != 6:
+                            writeto.write(character)
+                    writeto.write("\n")
+            writeto.write("%\n")
+        else:
+            pass
+    print(time.time() - a)
+print("Final processing time:  " + str(time.time() - a))
 a = time.time()
-file = open('mini1.txt', 'r')
+file = open('dataset2.txt', 'r')
 data = file.read()
-print("Read time : " + str(time.time() - a))
+print("Read time:  " + str(time.time() - a))
 
+# Allowed characters contain everything, including the None state "-"
 allowed = ['"', '#', '$', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3',
-           '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
-container = ['"', '#', '$', '&', '(', ')', '*', '+', '0', '1', '2', '3',
            '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
 
 train = [[],[],[],[],[],[]]
 true = [[],[],[],[],[],[]]
-chars2 = sorted(list(set(data)))
-print(chars2)
+charsset = sorted(list(set(data)))
 chars = []
-for s in chars2:
+for s in charsset:
     if s in allowed:
         chars.append(s)
+        
+# Character to integer mapping 
 charint = dict((char, ints) for ints, char in enumerate(chars))
 intchar = dict((ints,char) for ints, char in enumerate(chars))
+
+# Set your sequence length of the generated dataset here. 
+# This must be the same in your network file
 seqlen = 16
 
+# We go through every segment in the dataset,
+# traverse every line and add it to one big list for each string.
 a = time.time()
-
 e = 'e'
 B = 'B'
 G = 'G'
@@ -93,20 +139,17 @@ for segment in data.split("\n%\n"):
         elif(note==5):
             E += line
             note += 1
-e = e[1:]
-B = B[1:]
-G = G[1:]
-D = D[1:]
-A = A[1:]
-E = E[1:]
-print(time.time() - a)
-
+e = e.replace("e", "")
+e = e.replace("E", "")
+B = B.replace("B", "")
+G = G.replace("G", "")
+D = D.replace("D", "")
+A = A.replace("A", "")
+E = E.replace("E", "")
+print("Creating list for each string:  " + str(time.time() - a))
 size = min(len(e), len(B), len(G), len(D), len(A), len(E))
-print(size)
 
 a = time.time()
-
-
 for i in range(0, size - seqlen - 4, 4):
     train[0].append([charint[char] for char in e[i:i+seqlen]])
     train[1].append([charint[char] for char in B[i:i+seqlen]])
@@ -121,20 +164,14 @@ for i in range(0, size - seqlen - 4, 4):
     true[4].append([charint[char] for char in A[i+seqlen]])
     true[5].append([charint[char] for char in E[i+seqlen]])
 
-print(time.time() - a)
-
-
 learn = np.array([np.array(xi) for xi in train])
 test = np.asarray([np.array(xi) for xi in true])
+print("Time to append all data to numpy arrays:  " + str(time.time() - a))
 
-print("Learn shape:  ", end="")
-print(learn.shape)
-print("Test shape:   ", end="")
-print(test.shape)
+print("Learn shape: " + str(learn.shape))
+print("Test shape: " + str(test.shape))
 
-del train
-del true
-del e, B, G, D, A, E
+del train, true, e, B, G, D, A, E
 
 a = time.time()
 e = np.expand_dims(np.array(np.asarray(learn[0])[:size, :]), axis = 0)
@@ -152,39 +189,15 @@ y_D = np.expand_dims(test[3][:size], axis = 0)
 y_A = np.expand_dims(test[4][:size], axis = 0)
 y_E = np.expand_dims(test[5][:size], axis = 0)
 y_array = np.concatenate((y_e, y_B, y_G, y_D, y_A, y_E), axis = 0)
-print(y_array.shape)                                                # (6, 3321076, 1)
-y2 = to_categorical(y_array)                                        # (6, 3321076, 26)
-print(y2.shape)
+y2 = to_categorical(y_array)            # (6, 3321076, 26)
 inp = np.swapaxes(X, 0, 1)                      
 y2 = np.swapaxes(y2, 0, 1)
-print(y2.shape)                                                     # (3321076, 6, 26)
 y = np.empty((y2.shape[0], y2.shape[1]*y2.shape[2]))
 for i in range(y2.shape[0]):
     y[i] = y2[i, :, :].flatten()
-print(y.shape)                                                      # (3321076, 156)
 y = np.squeeze(y)
-print(y.shape)                                                      # (3321076, 156)
-print("Shape of input: ", inp.shape)    #            Shape of input:  (3321076, 6, 16)
-print("Shape of output: ", y.shape)     #            Shape of output: (3321076, 156)
+print("Shape of input: ", inp.shape)    # Shape of input:  (3321076, 6, 16)
+print("Shape of output: ", y.shape)     # Shape of output: (3321076, 156)
 
-np.save("smallinput", inp)
-np.save("smalltrue", y)
-
-'''
-
-0.0
-Read time : 1.1393682956695557
-['\n', '"', '#', '$', '%', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
-99.8011724948883
-13284323
-153.53768730163574
-Learn shape:  (6, 3321076, 16)
-Test shape:   (6, 3321076, 1)
-(6, 3321076, 1)
-(6, 3321076, 26)
-(3321076, 6, 26)
-(3321076, 156)
-(3321076, 156)
-Shape of input:  (3321076, 6, 16)
-Shape of output:  (3321076, 156)
-'''
+np.save("smallinpusssst", inp)
+np.save("smalltrusssse", y)
