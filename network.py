@@ -3,53 +3,12 @@
 Created on Sat Jan 13 18:22:05 2018
 
 @author: yash
-problem: (distribution)
-" --> 17288
-# --> 680322
-$ --> 266871
-& --> 281662
-( --> 120511
-) --> 194594
-* --> 248714
-+ --> 105843
-- --> 55968221
-0 --> 4346985
-1 --> 1270243
-2 --> 3488223
-3 --> 3034658
-4 --> 1709770
-5 --> 2511833
-6 --> 883409
-7 --> 1918110
-8 --> 746225
-9 --> 840976
-: --> 35828
-= --> 70870
-> --> 569052
-^ --> 215254
-_ --> 72396
-{ --> 62915
-} --> 45225
-Total character count : 79705998
-70.218% of dataset is "-"
+    
 """
-
-
-'''
-    GOALS
-    VALIDATION AND TRAIN DATA SET SEPERATION
-    LARGER NEURAL NETWORK
-    WEIGHTED LOSS FUNCTION
-'''
-
 
 import tensorflow as tf
 import numpy as np
-import sys
-import string
-import tflearn
-import time
-import random
+import tflearn, random, time
 
 chars = ['"', '#', '$', '&', '(', ')', '*', '+', '-', '0', '1', '2', '3', '4', 
          '5', '6', '7', '8', '9', ':', '=', '>', '^', '_', '{', '}']
@@ -68,16 +27,11 @@ intchar = {0: '23', 1: '10', 2: '11', 3: '14', 4: '16', 5: '17', 6: '15', 7: '19
            9: '0', 10: '1', 11: '2', 12: '3', 13: '4', 14: '5', 15: '6', 16: '7', 
            17: '8', 18: '9', 19: '24', 20: '20', 21: '12', 22: '13', 23: '18', 24: '22', 25: '21'}
 
-testing = 0
-
+testing = 1
 if testing:
     a = time.time()
     inp = np.load("smallinput.npy")
     y = np.load("smalltrue.npy")
-    print(inp.shape)
-    print(y.shape)
-    inp = inp[:,:,:]
-    y = y[:,:]
     print("Input load: " + str(time.time() - a))
 else:
     a = time.time()
@@ -86,12 +40,15 @@ else:
     print("Input load: " + str(time.time() - a))
 y = np.reshape(y, (y.shape[0], 6, len(chars)))
 y = np.swapaxes(y, 1, 2)
+print("Data shape: ", inp.shape)
 print("True shape: ", y.shape)
 
 num_strings = 6
-seqlen = 16
+seqlen = 16 
 lstmhid = 156
 filename = "trained"
+
+#   ---------------------------------------------------------------------------
 tf.reset_default_graph()
 net = tflearn.input_data(shape=[None, inp.shape[1], inp.shape[2]])
 net = tflearn.lstm(net, lstmhid, return_seq = True)
@@ -111,16 +68,17 @@ model = tflearn.DNN(net, checkpoint_path = 'guitarmodel/model.tfl.ckpt',
 
 print("Model fitting")
 ckpt = "guitarmodel/model.tfl.ckpt-170000"
-
+print(tf.test.gpu_device_name())
 #   Training
 if (1):
-    restore = 1
+    restore = 0
     if(restore):
         model.load(ckpt) 
     model.fit(inp, y, snapshot_step=5000, show_metric = True, snapshot_epoch=False,
                n_epoch=5, batch_size = 64)
     model.save(filename)
     
+#   ---------------------------------------------------------------------------
 #   Memory feed
 elif(0):
     print("Memory seed")
@@ -134,8 +92,6 @@ elif(0):
         print("seed:  " + str(index), end = '  shape:   ')
         test = inp[index, :, :]
         test = np.expand_dims(test, axis = 0)    
-        print(test.shape)
-    
         print("e\tB\tG\tD\tA\tE")
         for p in range(seqlen):
             arr = len(chars)*test[0,:,p]
@@ -158,7 +114,7 @@ elif(0):
         
 #   Random feed
 elif(0):
-    print("Random seed") 
+    print("Random seeds") 
     model.load(ckpt)
     seq = seqlen
     for _ in range(5):
